@@ -35,3 +35,12 @@ This project has been migrated to Next.js (App Router) and Supabase.
 - `npm run build` - production build
 - `npm run start` - run production build
 - `npm run lint` - TypeScript type-check
+
+## Behavior Validation
+
+Execution-ready validation assets are available here:
+
+- [Behavior Validation Plan](docs/behavior-validation-plan.md)
+- [Behavior Validation Tracker](docs/behavior-validation-tracker.csv)
+
+Run this before major feature additions to validate whether the WhatsApp loop is spreading naturally.

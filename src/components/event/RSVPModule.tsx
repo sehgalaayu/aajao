@@ -1,25 +1,87 @@
 import React, { useEffect, useRef, useState } from "react";
-import type { EventRecord } from "@/src/lib/useEvent";
+import type { EventRecord, UserState } from "@/src/lib/useEvent";
+import { formatEventDateTime } from "@/src/lib/useEvent";
+import { NameModal } from "@/src/components/event/NameModal";
 
 type RSVPModuleProps = {
   eventId: string;
   event: EventRecord | null;
+  counts: { going: number; maybe: number; no: number; total: number };
+  presenceCount: number;
+  userState: UserState;
   userStatus: string | null;
   submittingStatus: string | null;
   createdNow?: boolean;
-  onSelect: (status: string) => void;
+  openedFromWhatsApp?: boolean;
+  inviteRewardMessage?: string | null;
+  inviterRef: string;
+  needsName: boolean;
+  onInvite: () => void;
+  onSelect: (name: string, status: string) => void;
 };
 
 export function RSVPModule({
   eventId,
   event,
+  counts,
+  presenceCount,
+  userState,
   userStatus,
   submittingStatus,
   onSelect,
   createdNow,
+  openedFromWhatsApp,
+  inviteRewardMessage,
+  inviterRef,
+  onInvite,
+  needsName,
 }: RSVPModuleProps) {
   const [highlightRsvp, setHighlightRsvp] = useState(false);
+  const [showOpenNudge, setShowOpenNudge] = useState(false);
+  const [showInvitePrompt, setShowInvitePrompt] = useState(false);
+  const [nameModalOpen, setNameModalOpen] = useState(false);
+  const [pendingStatus, setPendingStatus] = useState<string | null>(null);
   const rsvpSectionRef = useRef<HTMLDivElement | null>(null);
+
+  const shareUrl =
+    typeof window === "undefined"
+      ? ""
+      : `${window.location.origin}/event/${eventId}${inviterRef ? `?ref=${encodeURIComponent(inviterRef)}` : ""}`;
+
+  const scheduleLabel = event
+    ? [
+        formatEventDateTime(event.event_date, event.time),
+        event.location,
+      ]
+        .filter(Boolean)
+        .join(" • ")
+    : "";
+
+  const whatsappHref = shareUrl
+    ? `https://wa.me/?text=${encodeURIComponent(
+        `🔥 Scene set hai!\n\n${event?.title ?? "Event"}\n${scheduleLabel || "Time TBD"}\n\nAlready ${counts.going} people in 👀\n\nTu aa raha hai? 👇\n${shareUrl}`,
+      )}`
+    : "https://wa.me";
+
+  const handleRSVP = (status: string) => {
+    if (needsName) {
+      // Open the modal, save the pending status
+      setPendingStatus(status);
+      setNameModalOpen(true);
+    } else {
+      // Already have a name in localStorage
+      const name = localStorage.getItem("aajao_name") ?? "Anonymous";
+      void onSelect(name, status);
+    }
+  };
+
+  const handleNameSubmit = (name: string) => {
+    setNameModalOpen(false);
+    if (pendingStatus) {
+      void onSelect(name, pendingStatus);
+      setPendingStatus(null);
+    }
+  };
 
   useEffect(() => {
     if (!createdNow || !rsvpSectionRef.current) return;
@@ -34,10 +96,54 @@ export function RSVPModule({
     return () => clearTimeout(timeout);
   }, [createdNow]);
 
+  useEffect(() => {
+    if (!openedFromWhatsApp || userState !== "viewer") {
+      setShowOpenNudge(false);
+      return;
+    }
+
+    setShowOpenNudge(true);
+    const timeout = setTimeout(() => setShowOpenNudge(false), 3000);
+    return () => clearTimeout(timeout);
+  }, [openedFromWhatsApp, userState]);
+
+  useEffect(() => {
+    if (!userStatus) {
+      setShowInvitePrompt(false);
+      return;
+    }
+
+    const timeout = setTimeout(() => setShowInvitePrompt(true), 500);
+    return () => clearTimeout(timeout);
+  }, [userStatus]);
+
   if (!event) return null;
 
   return (
     <section className="mt-8 mb-4">
+      <NameModal
+        open={nameModalOpen}
+        onSubmit={handleNameSubmit}
+        onClose={() => {
+          setNameModalOpen(false);
+          setPendingStatus(null);
+        }}
+      />
+
+      {showOpenNudge && (
+        <div className="mb-5 border border-white/15 bg-surface-bright/20 rounded-2xl p-4 animate-slide-in-up">
+          <p className="font-bold text-sm text-on-surface">
+            👀 {presenceCount} people already here
+          </p>
+          <p className="font-black text-base text-primary mt-1">
+            🔥 {counts.going} going
+          </p>
+          <p className="text-sm text-on-surface-variant mt-2">
+            Kaun aa raha hai? 👇
+          </p>
+        </div>
+      )}
+
       {createdNow && (
         <div className="mb-6 border border-white/15 bg-primary/10 rounded-2xl p-4 max-w-md shadow-sm">
           <p className="font-black text-lg mb-1 italic text-primary">
@@ -62,7 +168,7 @@ export function RSVPModule({
 
           <div className="grid grid-cols-1 gap-4">
             <button
-              onClick={() => onSelect("going")}
+              onClick={() => handleRSVP("going")}
               disabled={submittingStatus !== null}
               className={`w-full rounded-full p-[2px] transition-transform duration-200 ${
                 submittingStatus === "going" || userStatus === "going"
@@ -103,7 +209,7 @@ export function RSVPModule({
 
             <div className="grid grid-cols-2 gap-4">
               <button
-                onClick={() => onSelect("maybe")}
+                onClick={() => handleRSVP("maybe")}
                 disabled={submittingStatus !== null}
                 className="rounded-full py-4 flex justify-center items-center gap-2 transition-transform duration-200 active:scale-95"
                 style={{
@@ -121,7 +227,7 @@ export function RSVPModule({
               </button>
 
               <button
-                onClick={() => onSelect("no")}
+                onClick={() => handleRSVP("no")}
                 disabled={submittingStatus !== null}
                 className="rounded-full py-4 flex justify-center items-center gap-2 transition-transform duration-200 active:scale-95"
                 style={{
@@ -147,6 +253,32 @@ export function RSVPModule({
             <p className="font-black text-2xl italic text-primary drop-shadow-[0_0_12px_rgba(255,171,243,0.45)]">
               You're in 🔥
             </p>
+          )}
+
+          {showInvitePrompt && userStatus && (
+            <div className="mt-2 border border-white/10 bg-surface-bright/20 rounded-2xl p-4 animate-slide-in-up">
+              <p className="font-black text-base">+ Invite your squad</p>
+              <p className="text-sm text-on-surface-variant mt-1">
+                Make this a scene 👀
+              </p>
+              <a
+                href={whatsappHref}
+                target="_blank"
+                rel="noreferrer"
+                onClick={onInvite}
+                className="mt-3 inline-flex items-center justify-center gap-2 bg-[#25D366] text-white rounded-full py-2.5 px-5 font-bold text-sm active:scale-95 transition-transform"
+              >
+                <span className="material-symbols-outlined text-base">
+                  share
+                </span>
+                Share on WhatsApp
+              </a>
+              {inviteRewardMessage && (
+                <p className="text-sm text-primary font-bold mt-3">
+                  {inviteRewardMessage}
+                </p>
+              )}
+            </div>
           )}
         </div>
       </div>

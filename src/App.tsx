@@ -458,9 +458,15 @@ export default function App() {
               <RSVPModule
                 eventId="preview"
                 event={event}
+                counts={counts}
+                presenceCount={presenceCount}
+                userState="viewer"
                 userStatus={userStatus}
                 submittingStatus={submittingStatus}
                 onSelect={addResponse}
+                onInvite={() => {}}
+                needsName={false}
+                inviterRef=""
               />
               <ActivityFeed responses={responses} />
             </EventShell>

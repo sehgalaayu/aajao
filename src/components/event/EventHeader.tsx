@@ -1,5 +1,6 @@
 import React, { useMemo } from "react";
 import type { EventRecord } from "@/src/lib/useEvent";
+import { formatEventDateTime } from "@/src/lib/useEvent";
 
 type EventHeaderProps = {
   event: EventRecord | null;
@@ -29,6 +30,11 @@ export function EventHeader({
     return "🔥 Scene getting lit";
   }, [counts.going, counts.total, energy]);
 
+  const dateTimeLabel = useMemo(() => {
+    if (!event) return "";
+    return formatEventDateTime(event.event_date, event.time);
+  }, [event]);
+
   if (loading) {
     return <p className="font-bold">Loading scene...</p>;
   }
@@ -55,6 +61,15 @@ export function EventHeader({
         </h2>
 
         <div className="mt-6 flex flex-wrap gap-3">
+          {/* Date + Time Chip (combined or time-only for legacy) */}
+          {dateTimeLabel && (
+            <div className="bg-surface-container-high rounded-full px-5 py-3 flex items-center gap-3 shadow-lg">
+              <span className="material-symbols-outlined text-tertiary">
+                schedule
+              </span>
+              <span className="font-semibold text-sm">{dateTimeLabel}</span>
+            </div>
+          )}
           {/* Venue Chip */}
           {event.location && (
             <div className="bg-surface-container-high rounded-full px-5 py-3 flex items-center gap-3 shadow-lg">
@@ -62,15 +77,6 @@ export function EventHeader({
                 location_on
               </span>
               <span className="font-semibold text-sm">{event.location}</span>
-            </div>
-          )}
-          {/* Time Chip */}
-          {event.time && (
-            <div className="bg-surface-container-high rounded-full px-5 py-3 flex items-center gap-3 shadow-lg">
-              <span className="material-symbols-outlined text-tertiary">
-                schedule
-              </span>
-              <span className="font-semibold text-sm">{event.time}</span>
             </div>
           )}
         </div>
@@ -97,10 +103,10 @@ export function EventHeader({
 
       {/* Presence & Energy Indicators */}
       <div className="flex flex-col gap-3 mt-8">
-        <div className="glass-panel self-start rounded-full px-4 py-2 flex items-center gap-2 shadow-xl asymmetric-right">
-          <span className="relative flex h-2 w-2">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
+        <div className="glass-panel self-start rounded-full px-4 py-2 flex items-center gap-2 shadow-xl asymmetric-right border border-white/5">
+          <span className="relative flex h-2.5 w-2.5">
+            <span className="animate-live-pulse absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-primary shadow-[0_0_8px_rgba(255,171,243,0.5)]"></span>
           </span>
           <span className="text-[11px] font-bold uppercase tracking-wider text-on-surface">
             👀 You + {socialOthersCount} others here

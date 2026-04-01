@@ -91,6 +91,11 @@ export function ActivityFeed({ responses }: ActivityFeedProps) {
         content: <>Scene picking up ⚡</>,
         name: "Scene",
       });
+      synthetic.push({
+        id: "scene-urgency",
+        content: <>Call your group before it's full 😬</>,
+        name: "Scene",
+      });
     }
 
     if (maybeCount > 0) {

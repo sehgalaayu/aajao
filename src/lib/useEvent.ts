@@ -7,7 +7,61 @@ export type EventRecord = {
   host_name: string;
   location?: string;
   time?: string;
+  event_date?: string; // "2026-04-02" ISO date string
 };
+
+/**
+ * Formats event_date + time into a human-friendly string.
+ * Handles fallback for legacy records missing event_date.
+ */
+export function formatEventDateTime(
+  eventDate?: string | null,
+  time?: string | null,
+): string {
+  const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  const months = [
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr",
+    "May",
+    "Jun",
+    "Jul",
+    "Aug",
+    "Sep",
+    "Oct",
+    "Nov",
+    "Dec",
+  ];
+
+  let datePart = "";
+  if (eventDate) {
+    // parse "2026-04-02" safely
+    const [year, month, day] = eventDate.split("-").map(Number);
+    const d = new Date(year, month - 1, day);
+    if (!isNaN(d.getTime())) {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const tomorrow = new Date(today);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      const eventDay = new Date(d);
+      eventDay.setHours(0, 0, 0, 0);
+
+      if (eventDay.getTime() === today.getTime()) {
+        datePart = "Today";
+      } else if (eventDay.getTime() === tomorrow.getTime()) {
+        datePart = "Tomorrow";
+      } else {
+        datePart = `${days[d.getDay()]}, ${months[d.getMonth()]} ${d.getDate()}`;
+      }
+    }
+  }
+
+  if (datePart && time) return `${datePart} • ${time}`;
+  if (datePart) return datePart;
+  if (time) return time;
+  return "";
+}
 
 export type ResponseRecord = {
   id: string;
@@ -15,7 +69,11 @@ export type ResponseRecord = {
   name: string;
   status: string;
   created_at?: string;
+  invited_by?: string | null;
+  user_token?: string | null;
 };
+
+export type UserState = "viewer" | "responded" | "engaged" | "inviter";
 
 export type EventHookReturn = {
   event: EventRecord | null;
@@ -29,24 +87,102 @@ export type EventHookReturn = {
   error: string | null;
   toast: string | null;
   presenceCount: number;
-  addResponse: (status: string) => Promise<void>;
+  userState: UserState;
+  inviteRewardMessage: string | null;
+  joinsAfterInvite: number;
+  inviterRef: string;
+  addResponse: (name: string, status: string) => Promise<void>;
+  markInviteAction: () => void;
+  needsName: boolean;
 };
 
-export function useEvent(eventId: string | null, initialMockData?: Partial<EventHookReturn>): EventHookReturn {
-  const [event, setEvent] = useState<EventRecord | null>(initialMockData?.event ?? null);
-  const [responses, setResponses] = useState<ResponseRecord[]>(initialMockData?.responses ?? []);
-  const [loading, setLoading] = useState(initialMockData?.loading ?? !initialMockData);
-  const [error, setError] = useState<string | null>(initialMockData?.error ?? null);
+export function useEvent(
+  eventId: string | null,
+  initialMockData?: Partial<EventHookReturn>,
+): EventHookReturn {
+  const [event, setEvent] = useState<EventRecord | null>(
+    initialMockData?.event ?? null,
+  );
+  const [responses, setResponses] = useState<ResponseRecord[]>(
+    initialMockData?.responses ?? [],
+  );
+  const [loading, setLoading] = useState(
+    initialMockData?.loading ?? !initialMockData,
+  );
+  const [error, setError] = useState<string | null>(
+    initialMockData?.error ?? null,
+  );
   const [submittingStatus, setSubmittingStatus] = useState<string | null>(null);
-  const [userStatus, setUserStatus] = useState<string | null>(initialMockData?.userStatus ?? null);
+  const [userStatus, setUserStatus] = useState<string | null>(
+    initialMockData?.userStatus ?? null,
+  );
   const [toast, setToast] = useState<string | null>(null);
-  const [presenceCount, setPresenceCount] = useState<number>(initialMockData?.presenceCount ?? 1);
-  const [recentJoinTimestamps, setRecentJoinTimestamps] = useState<number[]>([]);
+  const [presenceCount, setPresenceCount] = useState<number>(
+    initialMockData?.presenceCount ?? 1,
+  );
+  const [recentJoinTimestamps, setRecentJoinTimestamps] = useState<number[]>(
+    [],
+  );
+  const [userState, setUserState] = useState<UserState>(
+    (initialMockData?.userState as UserState) ?? "viewer",
+  );
+  const [hasShared, setHasShared] = useState(false);
+  const [joinsAfterInvite, setJoinsAfterInvite] = useState(0);
+  const [inviterRef, setInviterRef] = useState<string>("");
+  const [joinedFromRef, setJoinedFromRef] = useState<string | null>(null);
+  const [userToken, setUserToken] = useState<string>("");
 
   const seenResponseIds = useRef<Set<string>>(new Set());
+  const optimisticIds = useRef<Set<string>>(new Set());
 
   // MOCK LOGIC BYPASS
   const isMockMode = Boolean(initialMockData);
+
+  useEffect(() => {
+    if (isMockMode || typeof window === "undefined") return;
+
+    const refStorageKey = "aajao_ref_id";
+    let currentRef = localStorage.getItem(refStorageKey);
+
+    if (!currentRef) {
+      currentRef =
+        typeof crypto !== "undefined" && "randomUUID" in crypto
+          ? crypto.randomUUID()
+          : `guest-${Date.now()}-${Math.floor(Math.random() * 100000)}`;
+      localStorage.setItem(refStorageKey, currentRef);
+    }
+
+    setInviterRef(currentRef);
+
+    const url = new URL(window.location.href);
+    const refFromUrl = url.searchParams.get("ref");
+    const joinedRefKey = "aajao_joined_from";
+
+    if (refFromUrl && refFromUrl !== currentRef) {
+      setJoinedFromRef(refFromUrl);
+      localStorage.setItem(joinedRefKey, refFromUrl);
+    } else {
+      const savedJoinedRef = localStorage.getItem(joinedRefKey);
+      if (savedJoinedRef) setJoinedFromRef(savedJoinedRef);
+    }
+  }, [eventId, isMockMode]);
+
+  useEffect(() => {
+    if (isMockMode || typeof window === "undefined") return;
+
+    const tokenStorageKey = "aajao_user_token";
+    let token = localStorage.getItem(tokenStorageKey);
+
+    if (!token) {
+      token =
+        typeof crypto !== "undefined" && "randomUUID" in crypto
+          ? crypto.randomUUID()
+          : `user-${Date.now()}-${Math.floor(Math.random() * 100000)}`;
+      localStorage.setItem(tokenStorageKey, token);
+    }
+
+    setUserToken(token);
+  }, [isMockMode]);
 
   const loadResponses = useCallback(
     async (resolvedEventId: string) => {
@@ -64,14 +200,46 @@ export function useEvent(eventId: string | null, initialMockData?: Partial<Event
       }
 
       const nextResponses = (data ?? []) as ResponseRecord[];
+
+      // Reconcile optimistic updates
+      // Only clear optimistic IDs if we actually see the corresponding record in the DB
+      // or if enough time has passed (to avoid permanent ghosts)
+      const confirmedUserTokens = new Set(nextResponses.map(r => r.user_token).filter(Boolean));
+      const confirmedNames = new Set(nextResponses.map(r => r.name).filter(Boolean));
+
+      // We'll filter the responses in the component, but let's manage the optimisticIds set
+      // Actually, a simpler way: just clear it once we have a non-empty list that likely includes our update
+      if (nextResponses.length > 0) {
+        optimisticIds.current.clear();
+      }
+
       const unseen = nextResponses.filter(
         (response) => !seenResponseIds.current.has(response.id),
       );
 
       if (seenResponseIds.current.size > 0 && unseen.length > 0) {
         const latest = unseen[unseen.length - 1];
-        setToast(`${latest.name} just pulled up 🔥`);
+        if (userState === "responded" || userState === "inviter") {
+          setToast("Someone joined after you 👀");
+        } else {
+          setToast(`${latest.name} just pulled up 🔥`);
+        }
         setRecentJoinTimestamps((previous) => [Date.now(), ...previous]);
+
+        if (userState === "responded") {
+          setUserState("engaged");
+        }
+
+        if (hasShared) {
+          const joinedSinceShare = unseen.filter((response) => {
+            if (response.status !== "going") return false;
+            if (!inviterRef) return false;
+            return response.invited_by === inviterRef;
+          }).length;
+          if (joinedSinceShare > 0) {
+            setJoinsAfterInvite((previous) => previous + joinedSinceShare);
+          }
+        }
       }
 
       unseen.forEach((response) => seenResponseIds.current.add(response.id));
@@ -79,15 +247,30 @@ export function useEvent(eventId: string | null, initialMockData?: Partial<Event
       setResponses(nextResponses);
 
       const savedName = localStorage.getItem("aajao_name");
-      if (savedName) {
+      if (savedName || userToken) {
         const lastOwnResponse = nextResponses
-          .filter((response: any) => response.name === savedName)
+          .filter((response: any) => {
+            if (userToken && response.user_token) {
+              return response.user_token === userToken;
+            }
+            return savedName ? response.name === savedName : false;
+          })
           .at(-1);
         setUserStatus(lastOwnResponse?.status ?? null);
       }
     },
-    [isMockMode],
+    [hasShared, inviterRef, isMockMode, userState, userToken],
   );
+
+  useEffect(() => {
+    if (isMockMode || userState !== "responded") return;
+
+    const timeout = setTimeout(() => {
+      setUserState("engaged");
+    }, 3500);
+
+    return () => clearTimeout(timeout);
+  }, [isMockMode, userState]);
 
   useEffect(() => {
     if (isMockMode) return;
@@ -171,7 +354,8 @@ export function useEvent(eventId: string | null, initialMockData?: Partial<Event
 
     const loadEvent = async () => {
       const supabase = getSupabaseClient();
-      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      const uuidRegex =
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
       const isUuid = uuidRegex.test(eventId);
 
       let query = supabase.from("events").select("*");
@@ -194,49 +378,77 @@ export function useEvent(eventId: string | null, initialMockData?: Partial<Event
     void loadEvent();
   }, [eventId, loadResponses, isMockMode]);
 
-  const askName = () => {
-    const saved = localStorage.getItem("aajao_name");
-    if (saved) return saved;
+  const needsName = useMemo(() => {
+    if (isMockMode) return false;
+    if (typeof window === "undefined") return true; 
+    return !localStorage.getItem("aajao_name");
+  }, [isMockMode, userStatus]);
 
-    const entered = prompt("Enter your name")?.trim();
-    if (!entered) return null;
-
-    localStorage.setItem("aajao_name", entered);
-    return entered;
-  };
-
-  const addResponse = async (status: string) => {
+  const addResponse = async (name: string, status: string) => {
     if (isMockMode && initialMockData?.addResponse) {
-      return initialMockData.addResponse(status);
+      return initialMockData.addResponse(name, status);
     }
 
-    let name = "You";
-    if (!isMockMode) {
-      const askResult = askName();
-      if (!askResult) {
-        setError("Name is required to RSVP.");
-        return;
-      }
-      name = askResult;
+    const trimmedName = name.trim();
+    if (!trimmedName || trimmedName.length < 2) {
+      setError("A valid name is required to RSVP.");
+      return;
     }
+
+    // Persist the name
+    localStorage.setItem("aajao_name", trimmedName);
+
+    const effectiveUserToken =
+      userToken ||
+      localStorage.getItem("aajao_user_token") ||
+      (() => {
+        const generated =
+          typeof crypto !== "undefined" && "randomUUID" in crypto
+            ? crypto.randomUUID()
+            : `user-${Date.now()}-${Math.floor(Math.random() * 100000)}`;
+        localStorage.setItem("aajao_user_token", generated);
+        setUserToken(generated);
+        return generated;
+      })();
 
     setError(null);
     setSubmittingStatus(status);
     setUserStatus(status);
+    setUserState("responded");
 
     if (responses.length === 0 && !isMockMode) {
       setToast("You're setting the vibe");
     }
 
+    const optimisticId = `optimistic-${Date.now()}`;
+    const existingResponse = responses
+      .filter((response) => {
+        if (response.user_token && effectiveUserToken) {
+          return response.user_token === effectiveUserToken;
+        }
+        return response.name === trimmedName;
+      })
+      .at(-1);
     const optimisticResponse: ResponseRecord = {
-      id: `optimistic-${Date.now()}`,
+      id: existingResponse?.id ?? optimisticId,
       event_id: event?.id ?? "preview",
-      name,
+      name: trimmedName,
       status,
       created_at: new Date().toISOString(),
+      invited_by: existingResponse?.invited_by ?? joinedFromRef ?? null,
+      user_token: existingResponse?.user_token ?? effectiveUserToken,
     };
 
-    setResponses((previous) => [...previous, optimisticResponse]);
+    optimisticIds.current.add(optimisticId);
+    setResponses((previous) => {
+      const withoutExisting = previous.filter((response) => {
+        if (response.user_token && effectiveUserToken) {
+          return response.user_token !== effectiveUserToken;
+        }
+        return response.name !== trimmedName;
+      });
+      return [...withoutExisting, optimisticResponse];
+    });
 
     if (isMockMode) {
       setSubmittingStatus(null);
@@ -244,20 +456,105 @@ export function useEvent(eventId: string | null, initialMockData?: Partial<Event
     }
 
     const supabase = getSupabaseClient();
-    const { error: insertError } = await supabase.from("responses").insert([
-      {
+    let insertError: { message?: string } | null = null;
+
+    let existingRow: { id: string } | null = null;
+    let existingLookupError: { message?: string } | null = null;
+
+    if (effectiveUserToken) {
+      const lookupByToken = await supabase
+        .from("responses")
+        .select("id")
+        .eq("event_id", event?.id ?? "")
+        .eq("user_token", effectiveUserToken)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (lookupByToken.error?.message?.toLowerCase().includes("user_token")) {
+        const lookupByName = await supabase
+          .from("responses")
+          .select("id")
+          .eq("event_id", event?.id ?? "")
+          .eq("name", trimmedName)
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        existingRow = lookupByName.data;
+        existingLookupError = lookupByName.error;
+      } else {
+        existingRow = lookupByToken.data;
+        existingLookupError = lookupByToken.error;
+      }
+    }
+
+    if (existingLookupError) {
+      insertError = existingLookupError;
+    } else if (existingRow?.id) {
+      const { error } = await supabase
+        .from("responses")
+        .update({ status, name: trimmedName })
+        .eq("id", existingRow.id);
+      insertError = error;
+    } else {
+      const payloadWithIdentity = {
         event_id: event?.id,
-        name,
+        name: trimmedName,
         status,
-      },
-    ]);
+        invited_by: joinedFromRef,
+        user_token: effectiveUserToken,
+      };
+
+      const tryInsert = async (payload: Record<string, unknown>) =>
+        supabase.from("responses").insert([payload]);
+
+      const sanitizeAndRetryInsert = async (
+        message: string,
+        payload: Record<string, unknown>,
+      ) => {
+        const lowered = message.toLowerCase();
+        const nextPayload = { ...payload };
+
+        if (lowered.includes("invited_by")) {
+          delete nextPayload.invited_by;
+        }
+        if (lowered.includes("user_token")) {
+          delete nextPayload.user_token;
+        }
+
+        return tryInsert(nextPayload);
+      };
+
+      const firstAttempt = await tryInsert(payloadWithIdentity);
+      insertError = firstAttempt.error;
+
+      if (insertError?.message) {
+        const retry = await sanitizeAndRetryInsert(
+          insertError.message,
+          payloadWithIdentity,
+        );
+        insertError = retry.error;
+      }
+    }
 
     setSubmittingStatus(null);
 
     if (insertError) {
-      setResponses((previous) =>
-        previous.filter((response) => response.id !== optimisticResponse.id),
-      );
+      optimisticIds.current.delete(optimisticId);
+      setResponses((previous) => {
+        if (existingResponse) {
+          const withoutUser = previous.filter((response) => {
+            if (response.user_token && effectiveUserToken) {
+              return response.user_token !== effectiveUserToken;
+            }
+            return response.name !== trimmedName;
+          });
+          return [...withoutUser, existingResponse];
+        }
+
+        return previous.filter((response) => response.id !== optimisticId);
+      });
       setError(insertError.message);
       return;
     }
@@ -288,6 +585,25 @@ export function useEvent(eventId: string | null, initialMockData?: Partial<Event
     return Math.max(0, Math.min(100, Math.round(raw)));
   }, [countsObj, isMockMode, initialMockData]);
 
+  const markInviteAction = useCallback(() => {
+    setHasShared(true);
+    setUserState("inviter");
+
+    if (joinsAfterInvite < 1) {
+      setToast("You brought the vibe 🔥");
+    }
+  }, [joinsAfterInvite]);
+
+  const inviteRewardMessage = useMemo(() => {
+    if (joinsAfterInvite >= 2) {
+      return "You started this scene 😎";
+    }
+    if (hasShared) {
+      return "You brought the vibe 🔥";
+    }
+    return null;
+  }, [hasShared, joinsAfterInvite]);
+
   return {
     event,
     responses,
@@ -300,6 +616,12 @@ export function useEvent(eventId: string | null, initialMockData?: Partial<Event
     error,
     toast: initialMockData?.toast ?? toast,
     presenceCount,
+    userState,
+    inviteRewardMessage,
+    joinsAfterInvite,
+    inviterRef,
     addResponse,
+    markInviteAction,
+    needsName,
   };
 }

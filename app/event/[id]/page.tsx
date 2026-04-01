@@ -14,6 +14,9 @@ export default function EventPage() {
   const searchParams = useSearchParams();
   const eventId = params.id;
   const createdNow = searchParams.get("created") === "1";
+  const openedFromWhatsApp =
+    searchParams.get("from") === "whatsapp" ||
+    searchParams.get("utm_source") === "whatsapp";
 
   const {
     event,
@@ -27,7 +30,13 @@ export default function EventPage() {
     error,
     toast,
     presenceCount,
+    userState,
+    inviteRewardMessage,
+    joinsAfterInvite,
+    inviterRef,
     addResponse,
+    markInviteAction,
+    needsName,
   } = useEvent(eventId);
 
   return (
@@ -43,17 +52,29 @@ export default function EventPage() {
       <RSVPModule
         eventId={eventId}
         event={event}
+        counts={counts}
+        presenceCount={presenceCount}
+        userState={userState}
         userStatus={userStatus}
         submittingStatus={submittingStatus}
+        openedFromWhatsApp={openedFromWhatsApp}
+        inviteRewardMessage={inviteRewardMessage}
+        inviterRef={inviterRef}
+        onInvite={markInviteAction}
         onSelect={addResponse}
         createdNow={createdNow}
+        needsName={needsName}
       />
 
-      {!loading && responses.length > 0 && <AvatarRow responses={responses} />}
+      {!loading &&
+        (userState === "engaged" || userState === "inviter") &&
+        responses.length > 0 && <AvatarRow responses={responses} />}
 
-      <ActivityFeed responses={responses} />
+      {!loading && (userState === "engaged" || userState === "inviter") && (
+        <ActivityFeed responses={responses} />
+      )}
 
-      {userStatus === "going" && event && (
+      {(userState === "engaged" || userState === "inviter") && event && (
         <div
           className="animate-slide-in-up"
           style={{ animationDelay: "0.3s", animationFillMode: "both" }}
@@ -62,6 +83,14 @@ export default function EventPage() {
             eventId={event.id ?? eventId}
             eventTitle={event.title}
             hostName={event.host_name}
+            eventTime={event.time}
+            eventDate={event.event_date}
+            eventLocation={event.location}
+            goingCount={counts.going}
+            rewardMessage={inviteRewardMessage}
+            joinsAfterInvite={joinsAfterInvite}
+            inviterRef={inviterRef}
+            onInvite={markInviteAction}
           />
         </div>
       )}
