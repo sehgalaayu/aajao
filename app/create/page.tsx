@@ -118,8 +118,27 @@ export default function CreatePage() {
   // Generate next 14 days for the date picker strip
   const dateOptions = useMemo(() => {
     const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-    const options: { iso: string; dayName: string; dayNum: number; monthName: string; label: string }[] = [];
+    const months = [
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
+      "May",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec",
+    ];
+    const options: {
+      iso: string;
+      dayName: string;
+      dayNum: number;
+      monthName: string;
+      label: string;
+    }[] = [];
     const now = new Date();
     for (let i = 0; i < 14; i++) {
       const d = new Date(now);
@@ -288,14 +307,18 @@ export default function CreatePage() {
       !isUpcomingTime(normalizedClock, period, timeDayOffset)
     ) {
       // If they selected a future date, the time check should use that date's offset
-      const dateOffset = eventDate ? (() => {
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        const [y, m, d] = eventDate.split("-").map(Number);
-        const selected = new Date(y, m - 1, d);
-        selected.setHours(0, 0, 0, 0);
-        return Math.round((selected.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-      })() : timeDayOffset;
+      const dateOffset = eventDate
+        ? (() => {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const [y, m, d] = eventDate.split("-").map(Number);
+            const selected = new Date(y, m - 1, d);
+            selected.setHours(0, 0, 0, 0);
+            return Math.round(
+              (selected.getTime() - today.getTime()) / (1000 * 60 * 60 * 24),
+            );
+          })()
+        : timeDayOffset;
 
       if (!isUpcomingTime(normalizedClock, period, dateOffset)) {
         setTimeError("Pick an upcoming time (at least 5 minutes from now)");
@@ -399,9 +422,8 @@ export default function CreatePage() {
     ? `${window.location.origin}/event/${createdData.slug || createdData.id}`
     : "";
 
-  const whatsappHref = `https://wa.me/?text=${encodeURIComponent(
-    `🔥 Scene set hai!\n\n🏏 ${title}\n👑 Hosted by ${hostName}\n📅 ${formatEventDateTime(eventDate || null, time ? `${time} ${period}` : null) || "Time TBD"}${location ? `\n📍 ${location}` : ""}\n\nKaun aa raha hai? 👇\nLive list dekh 👀\n${shareUrl}`,
-  )}`;
+  const shareMessage = `\u{1F525} Scene set hai!\n\n\u{1F3CF} ${title}\n\u{1F451} Hosted by ${hostName}\n\u{1F4C5} ${formatEventDateTime(eventDate || null, time ? `${time} ${period}` : null) || "Time TBD"}${location ? `\n\u{1F4CD} ${location}` : ""}\n\nKaun aa raha hai? \u{1F447}\nLive list dekh \u{1F440}\n${shareUrl}`;
+  const whatsappHref = `https://wa.me/?text=${encodeURIComponent(shareMessage)}`;
 
   return (
     <main className="pt-30 pb-16 px-6 max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8 items-center justify-items-center relative min-h-screen">
@@ -435,7 +457,9 @@ export default function CreatePage() {
               <div className="relative">
                 <input
                   className={`w-full bg-[#2a0f3d] text-on-surface p-4 rounded-lg border transition-all text-xl font-semibold font-headline outline-none ${
-                    error && !title.trim() ? "border-error/50 shadow-[0_0_0_3px_rgba(255,84,105,0.2)]" : "border-white/5 focus:border-primary/70 focus:shadow-[0_0_0_3px_rgba(255,171,243,0.2)]"
+                    error && !title.trim()
+                      ? "border-error/50 shadow-[0_0_0_3px_rgba(255,84,105,0.2)]"
+                      : "border-white/5 focus:border-primary/70 focus:shadow-[0_0_0_3px_rgba(255,171,243,0.2)]"
                   }`}
                   placeholder="Sunday Cricket"
                   type="text"
@@ -463,7 +487,9 @@ export default function CreatePage() {
               <div className="relative">
                 <input
                   className={`w-full bg-[#2a0f3d] text-on-surface p-4 rounded-lg border transition-all text-lg font-normal outline-none ${
-                    error && !hostName.trim() ? "border-error/50 shadow-[0_0_0_3px_rgba(255,84,105,0.2)]" : "border-white/5 focus:border-primary/70 focus:shadow-[0_0_0_3px_rgba(255,171,243,0.2)]"
+                    error && !hostName.trim()
+                      ? "border-error/50 shadow-[0_0_0_3px_rgba(255,84,105,0.2)]"
+                      : "border-white/5 focus:border-primary/70 focus:shadow-[0_0_0_3px_rgba(255,171,243,0.2)]"
                   }`}
                   placeholder="Rahul"
                   type="text"
@@ -512,7 +538,12 @@ export default function CreatePage() {
                       const [y, m, d] = opt.iso.split("-").map(Number);
                       const selected = new Date(y, m - 1, d);
                       selected.setHours(0, 0, 0, 0);
-                      setTimeDayOffset(Math.round((selected.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)));
+                      setTimeDayOffset(
+                        Math.round(
+                          (selected.getTime() - today.getTime()) /
+                            (1000 * 60 * 60 * 24),
+                        ),
+                      );
                       if (timeError) setTimeError(null);
                     }}
                     className={`flex-shrink-0 flex flex-col items-center min-w-[56px] px-3 py-2.5 rounded-xl border text-center transition-all ${
@@ -775,14 +806,16 @@ export default function CreatePage() {
               <p className="text-center text-on-surface-variant/60 text-sm mt-3 font-medium italic">
                 No login. No app. Just send the link.
               </p>
-              
+
               <div className="mt-8 pt-6 border-t border-white/5">
-                <Link 
-                  href="/how-it-works" 
+                <Link
+                  href="/how-it-works"
                   className="group flex items-center justify-center gap-2 text-xs font-black uppercase tracking-widest text-primary/40 hover:text-primary transition-all duration-300"
                 >
-                  New here? 
-                  <span className="text-primary/60 group-hover:text-primary">See how it works</span>
+                  New here?
+                  <span className="text-primary/60 group-hover:text-primary">
+                    See how it works
+                  </span>
                   <ArrowRight className="w-3.5 h-3.5 transition-transform duration-300 group-hover:translate-x-1" />
                 </Link>
               </div>
@@ -875,7 +908,12 @@ export default function CreatePage() {
                       }}
                       className="absolute left-1/2 top-1/2 w-2 h-2 rounded-sm"
                       style={{
-                        backgroundColor: i % 3 === 0 ? "#FFABF3" : i % 3 === 1 ? "#00E0FF" : "#FFFFFF",
+                        backgroundColor:
+                          i % 3 === 0
+                            ? "#FFABF3"
+                            : i % 3 === 1
+                              ? "#00E0FF"
+                              : "#FFFFFF",
                       }}
                     />
                   ))}
@@ -893,7 +931,10 @@ export default function CreatePage() {
                   {previewTitle}
                 </p>
                 <p className="text-on-surface-variant text-sm mt-1">
-                  {formatEventDateTime(eventDate || null, previewTime || null) || "Time TBD"}
+                  {formatEventDateTime(
+                    eventDate || null,
+                    previewTime || null,
+                  ) || "Time TBD"}
                   {previewLocation ? ` • ${previewLocation}` : ""}
                 </p>
               </div>

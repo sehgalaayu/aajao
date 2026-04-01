@@ -51,10 +51,10 @@ export function InviteCard({
     .filter(Boolean)
     .join(" • ");
 
+  const shareMessage = `\u{1F525} Scene set hai!\n\n${eventTitle ?? "Event"}\n${scheduleLabel || "Time TBD"}\n\nAlready ${goingCount} people in \u{1F440}\n\nTu aa raha hai? \u{1F447}\n${shareUrl}`;
+
   const whatsappHref = shareUrl
-    ? `https://wa.me/?text=${encodeURIComponent(
-        `🔥 Scene set hai!\n\n${eventTitle ?? "Event"}\n${scheduleLabel || "Time TBD"}\n\nAlready ${goingCount} people in 👀\n\nTu aa raha hai? 👇\n${shareUrl}`,
-      )}`
+    ? `https://wa.me/?text=${encodeURIComponent(shareMessage)}`
     : "https://wa.me";
 
   return (

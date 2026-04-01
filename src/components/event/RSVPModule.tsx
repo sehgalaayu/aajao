@@ -49,18 +49,15 @@ export function RSVPModule({
       : `${window.location.origin}/event/${eventId}${inviterRef ? `?ref=${encodeURIComponent(inviterRef)}` : ""}`;
 
   const scheduleLabel = event
-    ? [
-        formatEventDateTime(event.event_date, event.time),
-        event.location,
-      ]
+    ? [formatEventDateTime(event.event_date, event.time), event.location]
         .filter(Boolean)
         .join(" • ")
     : "";
 
+  const shareMessage = `\u{1F525} Scene set hai!\n\n${event?.title ?? "Event"}\n${scheduleLabel || "Time TBD"}\n\nAlready ${counts.going} people in \u{1F440}\n\nTu aa raha hai? \u{1F447}\n${shareUrl}`;
+
   const whatsappHref = shareUrl
-    ? `https://wa.me/?text=${encodeURIComponent(
-        `🔥 Scene set hai!\n\n${event?.title ?? "Event"}\n${scheduleLabel || "Time TBD"}\n\nAlready ${counts.going} people in 👀\n\nTu aa raha hai? 👇\n${shareUrl}`,
-      )}`
+    ? `https://wa.me/?text=${encodeURIComponent(shareMessage)}`
     : "https://wa.me";
 
   const handleRSVP = (status: string) => {
