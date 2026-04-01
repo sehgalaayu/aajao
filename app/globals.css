@@ -1,0 +1,193 @@
+@import url("https://fonts.googleapis.com/css2?family=Epilogue:ital,wght@0,700;0,800;0,900;1,700;1,800;1,900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap");
+@import "tailwindcss";
+
+@theme {
+  --font-headline: "Epilogue", sans-serif;
+  --font-body: "Plus Jakarta Sans", sans-serif;
+  --font-label: "Plus Jakarta Sans", sans-serif;
+
+  --color-background: #1d0c26;
+  --color-surface: #1d0c26;
+  --color-surface-bright: #45324e;
+  --color-surface-container-low: #25152f;
+  --color-surface-container: #2a1933;
+  --color-surface-container-high: #35233e;
+  --color-surface-container-highest: #402e49;
+  --color-surface-container-lowest: #170720;
+  --color-surface-variant: #402e49;
+  --color-surface-dim: #1d0c26;
+  --color-surface-tint: #ffabf3;
+
+  --color-primary: #ffabf3;
+  --color-primary-container: #ff00ff;
+  --color-primary-fixed: #ffd7f5;
+  --color-primary-fixed-dim: #ffabf3;
+
+  --color-secondary: #d8b9ff;
+  --color-secondary-container: #59318c;
+  --color-secondary-fixed: #eddcff;
+  --color-secondary-fixed-dim: #d8b9ff;
+
+  --color-tertiary: #f1c100;
+  --color-tertiary-container: #d0a600;
+  --color-tertiary-fixed: #ffe08b;
+  --color-tertiary-fixed-dim: #f1c100;
+
+  --color-error: #ffb4ab;
+  --color-error-container: #93000a;
+
+  --color-on-background: #f4dafe;
+  --color-on-surface: #f4dafe;
+  --color-on-surface-variant: #dcbed4;
+  --color-inverse-surface: #f4dafe;
+  --color-inverse-on-surface: #3b2a45;
+  --color-inverse-primary: #a900a9;
+
+  --color-on-primary: #5b005b;
+  --color-on-primary-container: #510051;
+  --color-on-primary-fixed: #380038;
+  --color-on-primary-fixed-variant: #810081;
+
+  --color-on-secondary: #411774;
+  --color-on-secondary-container: #cba3ff;
+  --color-on-secondary-fixed: #290055;
+  --color-on-secondary-fixed-variant: #59318c;
+
+  --color-on-tertiary: #3d2f00;
+  --color-on-tertiary-container: #4f3d00;
+  --color-on-tertiary-fixed: #241a00;
+  --color-on-tertiary-fixed-variant: #584400;
+
+  --color-on-error: #690005;
+  --color-on-error-container: #ffdad6;
+
+  --color-outline: #a4899d;
+  --color-outline-variant: #564052;
+}
+
+@layer base {
+  body {
+    @apply bg-background text-on-surface font-body;
+  }
+}
+
+@layer utilities {
+  .glass-card {
+    @apply backdrop-blur-md bg-surface-bright/35 border border-white/8;
+  }
+
+  .bounce-interaction {
+    @apply transition-transform active:scale-95 hover:scale-105;
+  }
+
+  .glass-panel {
+    background: rgba(69, 50, 78, 0.6);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+  }
+
+  .text-glow {
+    text-shadow: 0 0 16px rgba(255, 171, 243, 0.35);
+  }
+
+  .asymmetric-right {
+    transform: rotate(2deg) translateX(8px);
+  }
+
+  .asymmetric-left {
+    transform: rotate(-1.5deg) translateX(-4px);
+  }
+}
+
+@keyframes float {
+  0% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-20px) rotate(5deg);
+  }
+  100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+}
+
+@keyframes jitter {
+  0% {
+    transform: translate(0, 0) rotate(0deg);
+  }
+  25% {
+    transform: translate(2px, -2px) rotate(1deg);
+  }
+  50% {
+    transform: translate(-1px, 2px) rotate(-1deg);
+  }
+  75% {
+    transform: translate(-2px, -1px) rotate(1deg);
+  }
+  100% {
+    transform: translate(0, 0) rotate(0deg);
+  }
+}
+
+.animate-float-blob {
+  animation: float 12s ease-in-out infinite;
+}
+
+.animate-float-card {
+  animation: float 6s ease-in-out infinite;
+}
+
+.animate-jitter {
+  animation: jitter 0.3s ease-in-out infinite;
+}
+
+.animate-jitter-slow {
+  animation: jitter 4s ease-in-out infinite;
+}
+
+@keyframes slideInUp {
+  0% {
+    opacity: 0;
+    transform: translateY(10px) scale(0.98);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-slide-in-up {
+  animation: slideInUp 250ms ease-out forwards;
+}
+
+@keyframes previewFloat {
+  0% {
+    transform: translateY(0px) rotate(-1.5deg);
+  }
+  50% {
+    transform: translateY(-6px) rotate(-1.2deg);
+  }
+  100% {
+    transform: translateY(0px) rotate(-1.5deg);
+  }
+}
+
+.animate-preview-float {
+  animation: previewFloat 4s ease-in-out infinite;
+}
+
+@keyframes rsvpPulse {
+  0% {
+    box-shadow: 0 0 0 rgba(255, 171, 243, 0);
+  }
+  50% {
+    box-shadow: 0 0 28px rgba(255, 171, 243, 0.34);
+  }
+  100% {
+    box-shadow: 0 0 0 rgba(255, 171, 243, 0);
+  }
+}
+
+.animate-rsvp-pulse {
+  animation: rsvpPulse 1.2s ease-in-out;
+}
