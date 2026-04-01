@@ -25,41 +25,7 @@ import { EventShell } from "@/src/components/event/EventShell";
 import { EventHeader } from "@/src/components/event/EventHeader";
 import { RSVPModule } from "@/src/components/event/RSVPModule";
 import { ActivityFeed } from "@/src/components/event/ActivityFeed";
-
-const Navbar = () => (
-  <nav className="fixed top-0 w-full z-50 bg-background/40 backdrop-blur-3xl border-b border-white/5">
-    <div className="max-w-7xl mx-auto px-6 py-5 flex justify-between items-center">
-      <div className="text-3xl font-black italic tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-primary to-primary-container font-headline">
-        Aajao
-      </div>
-      <div className="hidden md:flex items-center gap-12">
-        <a
-          href="#"
-          className="text-primary font-bold italic border-b-2 border-primary pb-1 text-sm tracking-wide"
-        >
-          Explore
-        </a>
-        <a
-          href="#"
-          className="text-on-surface-variant font-medium text-sm hover:text-primary transition-colors tracking-wide"
-        >
-          How it Works
-        </a>
-      </div>
-      <div className="flex items-center gap-8">
-        <button className="hidden md:block text-on-surface font-semibold hover:text-primary transition-colors text-sm">
-          Login
-        </button>
-        <Link
-          href="/create"
-          className="bg-gradient-to-r from-primary to-primary-container text-background font-black px-8 py-3 rounded-full shadow-xl bounce-interaction text-sm uppercase tracking-wider"
-        >
-          Create
-        </Link>
-      </div>
-    </div>
-  </nav>
-);
+import { Navbar } from "@/src/components/common/Navbar";
 
 const LiveRSVPSimulator = () => {
   const [count, setCount] = useState(42);
@@ -388,7 +354,7 @@ export default function App() {
   return (
     <div className="min-h-screen bg-background overflow-x-hidden selection:bg-primary selection:text-background relative">
       <div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(circle_at_15%_20%,rgba(255,0,255,0.14),transparent_40%),radial-gradient(circle_at_80%_75%,rgba(241,193,0,0.12),transparent_35%)]" />
-      <Navbar />
+      <Navbar activePage="explore" />
 
       <Hero />
 
@@ -423,7 +389,7 @@ export default function App() {
             title="Sunday Cricket"
             date="Nov 12 • 07:00 AM"
             emoji="🏏"
-            image="https://picsum.photos/seed/cricket2/500/600"
+            image="https://images.unsplash.com/photo-1624526267942-ab0ff8a3e972?auto=format&fit=crop&w=900&q=80"
             badge="Rahul +14 GOING"
             social="1"
             rotate={-2}
@@ -432,7 +398,7 @@ export default function App() {
             title="House Party"
             date="Dec 31 • 09:00 PM"
             emoji="🍻"
-            image="https://picsum.photos/seed/party2/500/600"
+            image="https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?auto=format&fit=crop&w=900&q=80"
             badge="Anjali +28 MAYBE"
             social="2"
             rotate={1}
@@ -441,7 +407,7 @@ export default function App() {
             title="Goa Trip"
             date="Jan 15 • ALL DAY"
             emoji="✈️"
-            image="https://picsum.photos/seed/goa2/500/600"
+            image="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=900&q=80"
             badge="Siddharth +6 PACKED"
             social="3"
             rotate={-1}
@@ -496,7 +462,7 @@ export default function App() {
       </section>
 
       {/* Comparison - More Breathing Space */}
-      <section className="px-6 py-48 bg-surface-bright/10">
+      <section id="how-it-works" className="px-6 py-48 bg-surface-bright/10">
         <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-32 items-center">
           <div className="relative">
             <h3 className="text-5xl font-black font-headline mb-16 text-red-400 italic rotate-[-2deg] tracking-tight">
@@ -616,7 +582,7 @@ export default function App() {
       </section>
 
       {/* Bottom CTA - Massive & Expressive */}
-      <section className="px-6 py-64 text-center relative overflow-hidden">
+      <section className="px-6 pt-56 pb-36 text-center relative overflow-hidden">
         <div className="absolute inset-0 -z-10">
           <motion.div
             animate={{ scale: [1, 1.2, 1], rotate: [0, 90, 0] }}
@@ -668,33 +634,91 @@ export default function App() {
         </div>
       </section>
 
-      <footer className="bg-surface/20 py-32 px-8 border-t border-white/5">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-20">
-          <div className="flex flex-col gap-6 text-center md:text-left">
+      <footer className="bg-surface/20 py-20 px-8 border-t border-white/[0.06]">
+        <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-12 md:gap-16 items-start">
+          <div className="flex flex-col gap-4 text-center md:text-left">
             <div className="text-5xl font-headline font-black italic tracking-tighter text-on-surface">
               Aajao
             </div>
-            <p className="text-on-surface-variant text-xl font-bold max-w-sm leading-relaxed opacity-80">
+            <p className="text-on-surface-variant text-lg font-bold max-w-sm leading-relaxed opacity-80 mx-auto md:mx-0">
               The easiest way to organize anything from gully cricket to the
               year-end rager.
             </p>
+            <p className="text-sm font-semibold text-on-surface-variant/80">
+              Used for cricket, parties & everything in between.
+            </p>
           </div>
-          <div className="flex flex-wrap justify-center gap-12 text-lg font-bold text-on-surface-variant">
-            <a href="#" className="hover:text-primary transition-colors italic">
-              Privacy
-            </a>
-            <a href="#" className="hover:text-primary transition-colors italic">
-              Terms
-            </a>
-            <a href="#" className="hover:text-primary transition-colors italic">
-              Support
-            </a>
-            <a href="#" className="hover:text-primary transition-colors italic">
-              Instagram
-            </a>
+
+          <div className="grid grid-cols-3 gap-6 text-center md:text-left">
+            <div>
+              <p className="text-xs uppercase tracking-[0.16em] font-black text-on-surface-variant/70 mb-3">
+                Product
+              </p>
+              <div className="space-y-2 text-base font-bold text-on-surface-variant">
+                <Link
+                  href="/how-it-works"
+                  className="block hover:text-primary transition-colors italic"
+                >
+                  How it works
+                </Link>
+                <a
+                  href="#"
+                  className="block hover:text-primary transition-colors italic"
+                >
+                  Explore
+                </a>
+              </div>
+            </div>
+            <div>
+              <p className="text-xs uppercase tracking-[0.16em] font-black text-on-surface-variant/70 mb-3">
+                Legal
+              </p>
+              <div className="space-y-2 text-base font-bold text-on-surface-variant">
+                <a
+                  href="#"
+                  className="block hover:text-primary transition-colors italic"
+                >
+                  Privacy
+                </a>
+                <a
+                  href="#"
+                  className="block hover:text-primary transition-colors italic"
+                >
+                  Terms
+                </a>
+              </div>
+            </div>
+            <div>
+              <p className="text-xs uppercase tracking-[0.16em] font-black text-on-surface-variant/70 mb-3">
+                Social
+              </p>
+              <div className="space-y-2 text-base font-bold text-on-surface-variant">
+                <a
+                  href="#"
+                  className="block hover:text-primary transition-colors italic"
+                >
+                  Follow the vibe
+                </a>
+                <a
+                  href="#"
+                  className="block hover:text-primary transition-colors italic"
+                >
+                  Help
+                </a>
+              </div>
+            </div>
           </div>
-          <div className="text-primary-container font-black text-xl italic bg-surface-bright/30 px-10 py-3 rounded-full border border-white/5">
-            Made by Aayu Sehgal- Founder of Aajao with love
+
+          <div className="text-center md:text-right">
+            <p className="text-on-surface text-lg font-black italic">
+              Built by Aayu Sehgal
+            </p>
+            <p className="text-on-surface-variant text-sm font-semibold">
+              Founder, Aajao
+            </p>
+            <p className="text-primary-container text-base font-black italic mt-3">
+              ❤️ Made with vibes
+            </p>
           </div>
         </div>
       </footer>

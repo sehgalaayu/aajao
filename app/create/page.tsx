@@ -6,6 +6,8 @@ import { getSupabaseClient } from "@/lib/supabase";
 import { EventHeader } from "@/src/components/event/EventHeader";
 import { formatEventDateTime } from "@/src/lib/useEvent";
 import { motion, AnimatePresence } from "motion/react";
+import Link from "next/link";
+import { ArrowRight } from "lucide-react";
 
 type LocationSuggestion = {
   id: string;
@@ -773,6 +775,17 @@ export default function CreatePage() {
               <p className="text-center text-on-surface-variant/60 text-sm mt-3 font-medium italic">
                 No login. No app. Just send the link.
               </p>
+              
+              <div className="mt-8 pt-6 border-t border-white/5">
+                <Link 
+                  href="/how-it-works" 
+                  className="group flex items-center justify-center gap-2 text-xs font-black uppercase tracking-widest text-primary/40 hover:text-primary transition-all duration-300"
+                >
+                  New here? 
+                  <span className="text-primary/60 group-hover:text-primary">See how it works</span>
+                  <ArrowRight className="w-3.5 h-3.5 transition-transform duration-300 group-hover:translate-x-1" />
+                </Link>
+              </div>
             </div>
 
             {error && (
