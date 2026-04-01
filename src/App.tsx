@@ -360,9 +360,27 @@ export default function App() {
   } = useEvent(null, {
     event: { id: "preview", title: "Friday Night Scenes", host_name: "Ishan" },
     responses: [
-      { id: "1", event_id: "preview", name: "Ria", status: "going", created_at: new Date().toISOString() },
-      { id: "2", event_id: "preview", name: "Arjun", status: "maybe", created_at: new Date().toISOString() },
-      { id: "3", event_id: "preview", name: "Neha", status: "going", created_at: new Date().toISOString() },
+      {
+        id: "1",
+        event_id: "preview",
+        name: "Ria",
+        status: "going",
+        created_at: new Date().toISOString(),
+      },
+      {
+        id: "2",
+        event_id: "preview",
+        name: "Arjun",
+        status: "maybe",
+        created_at: new Date().toISOString(),
+      },
+      {
+        id: "3",
+        event_id: "preview",
+        name: "Neha",
+        status: "going",
+        created_at: new Date().toISOString(),
+      },
     ],
     presenceCount: 12,
   });
@@ -676,7 +694,7 @@ export default function App() {
             </a>
           </div>
           <div className="text-primary-container font-black text-xl italic bg-surface-bright/30 px-10 py-3 rounded-full border border-white/5">
-            © 2024 Aajao. Full Scene Hai!
+            Made by Aayu Sehgal- Founder of Aajao with love
           </div>
         </div>
       </footer>
