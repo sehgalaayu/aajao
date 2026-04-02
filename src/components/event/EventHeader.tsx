@@ -19,7 +19,11 @@ export function EventHeader({
   loading,
   energy,
 }: EventHeaderProps) {
-  const socialOthersCount = Math.max(1, presenceCount - 1);
+  const socialOthersCount = Math.max(0, presenceCount - 1);
+  const presenceLabel =
+    socialOthersCount === 0
+      ? "👀 Just you here"
+      : `👀 You + ${socialOthersCount} ${socialOthersCount === 1 ? "other" : "others"} here`;
 
   const energyLabel = useMemo(() => {
     const activePeople = Math.max(counts.going, counts.total);
@@ -44,7 +48,7 @@ export function EventHeader({
   }
 
   return (
-    <section className="relative mt-20 mb-12">
+    <section className="relative mt-14 sm:mt-20 mb-10 sm:mb-12">
       {/* Decorative Blobs */}
       <div className="absolute -top-10 -left-10 w-40 h-40 bg-primary/20 rounded-full blur-[60px] -z-10 animate-float-blob" />
       <div
@@ -56,27 +60,41 @@ export function EventHeader({
         <span className="text-primary font-bold tracking-widest uppercase text-[10px] px-1">
           Hosted by {event.host_name}
         </span>
-        <h2 className="text-6xl font-black font-headline tracking-tighter leading-[0.9] text-glow italic asymmetric-left break-words">
+        <h2 className="text-4xl sm:text-5xl md:text-6xl font-black font-headline tracking-tighter leading-[0.95] sm:leading-[0.9] text-glow italic asymmetric-left break-words">
           {event.title}
         </h2>
 
         <div className="mt-6 flex flex-wrap gap-3">
           {/* Date + Time Chip (combined or time-only for legacy) */}
           {dateTimeLabel && (
-            <div className="bg-surface-container-high rounded-full px-5 py-3 flex items-center gap-3 shadow-lg">
+            <div className="bg-surface-container-high rounded-full px-4 sm:px-5 py-2.5 sm:py-3 flex items-center gap-2.5 sm:gap-3 shadow-lg max-w-full">
               <span className="material-symbols-outlined text-tertiary">
                 schedule
               </span>
-              <span className="font-semibold text-sm">{dateTimeLabel}</span>
+              <span className="font-semibold text-xs sm:text-sm break-words">
+                {dateTimeLabel}
+              </span>
             </div>
           )}
           {/* Venue Chip */}
           {event.location && (
-            <div className="bg-surface-container-high rounded-full px-5 py-3 flex items-center gap-3 shadow-lg">
+            <div className="bg-surface-container-high rounded-full px-4 sm:px-5 py-2.5 sm:py-3 flex items-center gap-2.5 sm:gap-3 shadow-lg max-w-full">
               <span className="material-symbols-outlined text-primary">
                 location_on
               </span>
-              <span className="font-semibold text-sm">{event.location}</span>
+              <span className="font-semibold text-xs sm:text-sm break-words">
+                {event.location}
+              </span>
+            </div>
+          )}
+          {event.recurring_weekly && (
+            <div className="bg-surface-container-high rounded-full px-4 sm:px-5 py-2.5 sm:py-3 flex items-center gap-2.5 sm:gap-3 shadow-lg max-w-full">
+              <span className="material-symbols-outlined text-secondary">
+                repeat
+              </span>
+              <span className="font-semibold text-xs sm:text-sm break-words">
+                Repeats weekly
+              </span>
             </div>
           )}
         </div>
@@ -109,7 +127,7 @@ export function EventHeader({
             <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-primary shadow-[0_0_8px_rgba(255,171,243,0.5)]"></span>
           </span>
           <span className="text-[11px] font-bold uppercase tracking-wider text-on-surface">
-            👀 You + {socialOthersCount} others here
+            {presenceLabel}
           </span>
         </div>
         <div className="bg-secondary-container self-start rounded-full px-4 py-2 flex items-center gap-2 shadow-lg shadow-secondary/10 hover:scale-105 transition-transform">

@@ -10,6 +10,15 @@ This project has been migrated to Next.js (App Router) and Supabase.
 - Tailwind CSS
 - Supabase (`@supabase/supabase-js`)
 
+## Performance Notes
+
+- Homepage is optimized for mobile-first first paint:
+  - Above-the-fold content (navbar + hero) loads first.
+  - Heavy below-the-fold sections are split into a separate chunk and lazy-mounted with an `IntersectionObserver` trigger.
+- Initial client work was reduced by removing debug network calls and unused dependencies.
+
+This keeps the initial JavaScript payload lighter on mobile while preserving the full visual experience as users scroll.
+
 ## Local Setup
 
 1. Install dependencies:

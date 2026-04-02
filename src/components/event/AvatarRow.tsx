@@ -32,7 +32,7 @@ export function AvatarRow({ responses }: AvatarRowProps) {
   );
 
   return (
-    <div className="mt-8 flex items-center justify-between border border-white/5 bg-surface-bright/20 p-4 rounded-3xl">
+    <div className="mt-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border border-white/5 bg-surface-bright/20 p-4 rounded-3xl">
       <div className="flex items-center">
         <div className="flex -space-x-3">
           {showList.map((res, i) => (
@@ -54,7 +54,7 @@ export function AvatarRow({ responses }: AvatarRowProps) {
           )}
         </div>
       </div>
-      <div className="text-right flex-1 ml-4 line-clamp-2 leading-tight">
+      <div className="text-left sm:text-right flex-1 sm:ml-4 line-clamp-2 leading-tight w-full">
         <span className="font-bold text-on-surface">
           {goingResponses.length === 1
             ? `${firstPerson.name} is going 🔥`

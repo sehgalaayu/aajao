@@ -108,9 +108,13 @@ export default function CreatePage() {
 
   const [title, setTitle] = useState("");
   const [hostName, setHostName] = useState("");
+  const [hostEmail, setHostEmail] = useState("");
+  const [inviteAudienceInput, setInviteAudienceInput] = useState("");
+  const [whatToCarryInput, setWhatToCarryInput] = useState("");
   const [location, setLocation] = useState("");
   const [time, setTime] = useState("");
   const [period, setPeriod] = useState<"AM" | "PM">("AM");
+  const [recurringWeekly, setRecurringWeekly] = useState(false);
   const [eventDate, setEventDate] = useState<string>(""); // "2026-04-02" ISO
   const [timeDayOffset, setTimeDayOffset] = useState(0);
   const [timeError, setTimeError] = useState<string | null>(null);
@@ -156,6 +160,11 @@ export default function CreatePage() {
       });
     }
     return options;
+  }, []);
+
+  const todayIso = useMemo(() => {
+    const today = new Date();
+    return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
   }, []);
 
   const dateScrollRef = useRef<HTMLDivElement>(null);
@@ -292,6 +301,24 @@ export default function CreatePage() {
 
     const finalTitle = formatSceneText(title);
     const finalHost = formatSceneText(hostName);
+    const finalHostEmail = hostEmail.trim().toLowerCase();
+    const inviteAudience = Array.from(
+      new Set(
+        inviteAudienceInput
+          .split(",")
+          .map((name) => formatSceneText(name))
+          .filter((name) => name.length >= 2),
+      ),
+    ).slice(0, 40);
+    const whatToCarry = Array.from(
+      new Set(
+        whatToCarryInput
+          .split(/\n|,/)
+          .map((item) => item.replace(/^[-•\s]+/, ""))
+          .map((item) => formatSceneText(item))
+          .filter((item) => item.length >= 2),
+      ),
+    ).slice(0, 20);
     const finalLocation = formatSceneText(location);
     const normalizedClock = normalizeTimeInput(time);
 
@@ -343,6 +370,15 @@ export default function CreatePage() {
       return;
     }
 
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!finalHostEmail || !emailRegex.test(finalHostEmail)) {
+      setError("Please enter a valid host email for re-entry.");
+      setSubmitting(false);
+      return;
+    }
+
+    localStorage.setItem("aajao_host_email", finalHostEmail);
+
     setTitle(finalTitle);
     setHostName(finalHost);
     if (location.trim()) setLocation(finalLocation);
@@ -366,9 +402,13 @@ export default function CreatePage() {
         {
           title: finalTitle,
           host_name: finalHost,
+          host_email: finalHostEmail,
+          invite_audience: inviteAudience,
+          what_to_carry: whatToCarry,
           location: finalLocation || null,
           time: finalTime || null,
           event_date: eventDate || null,
+          recurring_weekly: recurringWeekly,
           slug,
         },
       ])
@@ -377,23 +417,37 @@ export default function CreatePage() {
 
     let result = await insertPromise;
 
-    // Graceful fallback if the column doesn't exist yet
-    if (
-      result.error?.message?.toLowerCase().includes("event_date") ||
-      result.error?.message?.toLowerCase().includes("column")
-    ) {
-      console.warn("event_date column missing, retrying without it...");
+    // Graceful fallback if newer columns are missing on a stale DB
+    if (result.error?.message?.toLowerCase().includes("column")) {
+      const lowered = result.error.message.toLowerCase();
+      const fallbackPayload: Record<string, unknown> = {
+        title: finalTitle,
+        host_name: finalHost,
+        host_email: finalHostEmail,
+        invite_audience: inviteAudience,
+        what_to_carry: whatToCarry,
+        location: finalLocation || null,
+        time: finalTime || null,
+        event_date: eventDate || null,
+        recurring_weekly: recurringWeekly,
+        slug,
+      };
+
+      if (lowered.includes("host_email")) delete fallbackPayload.host_email;
+      if (lowered.includes("invite_audience")) {
+        delete fallbackPayload.invite_audience;
+      }
+      if (lowered.includes("what_to_carry")) {
+        delete fallbackPayload.what_to_carry;
+      }
+      if (lowered.includes("event_date")) delete fallbackPayload.event_date;
+      if (lowered.includes("recurring_weekly")) {
+        delete fallbackPayload.recurring_weekly;
+      }
+
       insertPromise = supabase
         .from("events")
-        .insert([
-          {
-            title: finalTitle,
-            host_name: finalHost,
-            location: finalLocation || null,
-            time: finalTime || null,
-            slug,
-          },
-        ])
+        .insert([fallbackPayload])
         .select("id, slug")
         .single();
       result = await insertPromise;
@@ -426,16 +480,26 @@ export default function CreatePage() {
   const whatsappHref = `https://wa.me/?text=${encodeURIComponent(shareMessage)}`;
 
   return (
-    <main className="pt-30 pb-16 px-6 max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8 items-center justify-items-center relative min-h-screen">
+    <main className="pt-24 sm:pt-28 pb-12 sm:pb-16 px-4 sm:px-6 max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8 items-center justify-items-center relative min-h-screen">
       <div className="fixed top-[-10%] left-[-10%] w-[50%] h-[50%] bg-primary/10 blur-[120px] rounded-full -z-20 pointer-events-none"></div>
       <div className="fixed bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-secondary-container/20 blur-[120px] rounded-full -z-20 pointer-events-none"></div>
       <div className="fixed top-[24%] right-[16%] w-52 h-36 rounded-3xl border border-white/8 bg-white/[0.02] rotate-12 blur-[1px] -z-20 pointer-events-none"></div>
       <div className="fixed bottom-[14%] left-[11%] w-44 h-32 rounded-3xl border border-white/8 bg-primary/[0.04] -rotate-6 blur-[1px] -z-20 pointer-events-none"></div>
 
       <section className="space-y-6 animate-slide-in-up max-w-xl lg:max-w-[560px] w-full justify-self-center">
-        <div className="bg-[#1a0828] p-7 rounded-2xl border border-white/8 shadow-[0px_16px_42px_rgba(6,2,10,0.38)] relative overflow-hidden">
+        <Link
+          href="/"
+          className="inline-flex items-center gap-2 text-sm font-semibold text-on-surface-variant hover:text-primary transition-colors"
+        >
+          <span className="material-symbols-outlined text-base">
+            arrow_back
+          </span>
+          Back to home
+        </Link>
+
+        <div className="bg-[#1a0828] p-5 sm:p-7 rounded-2xl border border-white/8 shadow-[0px_16px_42px_rgba(6,2,10,0.38)] relative overflow-hidden">
           <header className="mb-5">
-            <h1 className="text-5xl font-black font-headline text-white mb-2 tracking-tight leading-[0.94]">
+            <h1 className="text-4xl sm:text-5xl font-black font-headline text-white mb-2 tracking-tight leading-[0.94]">
               Create your scene 🔥
             </h1>
             <p className="text-on-surface-variant text-base">
@@ -510,6 +574,76 @@ export default function CreatePage() {
               </div>
             </div>
 
+            <div className="group">
+              <label className="block text-sm font-semibold mb-2 ml-1 text-on-secondary-container/95 tracking-wider uppercase text-[10px]">
+                Host Email (for re-entry)
+              </label>
+              <div className="relative">
+                <input
+                  className="w-full bg-[#2a0f3d] text-on-surface p-4 rounded-lg border border-white/5 focus:border-primary/70 focus:shadow-[0_0_0_3px_rgba(255,171,243,0.2)] transition-all text-base font-normal outline-none"
+                  placeholder="rahul@email.com"
+                  type="email"
+                  value={hostEmail}
+                  onChange={(e) => {
+                    setHostEmail(e.target.value);
+                    if (error) setError(null);
+                  }}
+                  required
+                />
+              </div>
+            </div>
+
+            <div className="group">
+              <button
+                type="button"
+                onClick={() => setRecurringWeekly((previous) => !previous)}
+                className={`w-full rounded-xl border px-4 py-3 text-left transition-colors ${
+                  recurringWeekly
+                    ? "border-primary/40 bg-primary/10"
+                    : "border-white/8 bg-surface-container-high"
+                }`}
+              >
+                <p className="text-sm font-black">Repeat this scene weekly</p>
+                <p className="text-xs mt-1 text-on-surface-variant">
+                  Great for Sunday cricket and recurring group plans.
+                </p>
+              </button>
+            </div>
+
+            <div className="group">
+              <label className="block text-sm font-semibold mb-2 ml-1 text-on-secondary-container/95 tracking-wider uppercase text-[10px]">
+                Who are you inviting? (optional)
+              </label>
+              <textarea
+                value={inviteAudienceInput}
+                onChange={(e) => setInviteAudienceInput(e.target.value)}
+                placeholder="Rahul, Neha, Arjun"
+                rows={2}
+                className="w-full resize-none bg-[#2a0f3d] text-on-surface p-4 rounded-lg border border-white/5 focus:border-primary/70 focus:shadow-[0_0_0_3px_rgba(255,171,243,0.2)] transition-all text-sm outline-none"
+              />
+              <p className="text-[11px] mt-1 text-on-surface-variant/70">
+                Add comma-separated names for exact non-responder nudges.
+              </p>
+            </div>
+
+            <div className="group">
+              <label className="block text-sm font-semibold mb-2 ml-1 text-on-secondary-container/95 tracking-wider uppercase text-[10px]">
+                What to carry (optional)
+              </label>
+              <textarea
+                value={whatToCarryInput}
+                onChange={(e) => setWhatToCarryInput(e.target.value)}
+                placeholder={
+                  "Exact location pin\nStart time confirmation\nAny essentials"
+                }
+                rows={3}
+                className="w-full resize-none bg-[#2a0f3d] text-on-surface p-4 rounded-lg border border-white/5 focus:border-primary/70 focus:shadow-[0_0_0_3px_rgba(255,171,243,0.2)] transition-all text-sm outline-none"
+              />
+              <p className="text-[11px] mt-1 text-on-surface-variant/70">
+                Add one item per line for guests.
+              </p>
+            </div>
+
             {/* Date Picker Strip */}
             <div className="group">
               <label className="block text-sm font-semibold mb-2 ml-1 text-on-secondary-container/95 tracking-wider uppercase text-[10px]">
@@ -563,6 +697,37 @@ export default function CreatePage() {
                     </span>
                   </button>
                 ))}
+              </div>
+
+              <div className="mt-2">
+                <label className="block text-[11px] text-on-surface-variant mb-1">
+                  Need another date? Pick any day
+                </label>
+                <input
+                  type="date"
+                  min={todayIso}
+                  value={eventDate}
+                  onChange={(e) => {
+                    const pickedDate = e.target.value;
+                    setEventDate(pickedDate);
+
+                    const today = new Date();
+                    today.setHours(0, 0, 0, 0);
+                    const [y, m, d] = pickedDate.split("-").map(Number);
+                    const selected = new Date(y, m - 1, d);
+                    selected.setHours(0, 0, 0, 0);
+
+                    setTimeDayOffset(
+                      Math.round(
+                        (selected.getTime() - today.getTime()) /
+                          (1000 * 60 * 60 * 24),
+                      ),
+                    );
+
+                    if (timeError) setTimeError(null);
+                  }}
+                  className="w-full bg-[#2a0f3d] text-on-surface py-3 px-4 rounded-lg border border-white/5 focus:border-primary/70 focus:shadow-[0_0_0_3px_rgba(255,171,243,0.2)] transition-all font-normal outline-none"
+                />
               </div>
             </div>
 
@@ -636,7 +801,7 @@ export default function CreatePage() {
                   </button>
                 </div>
 
-                <div className="flex gap-2 mt-2">
+                <div className="flex flex-wrap gap-2 mt-2">
                   <button
                     type="button"
                     onClick={() => applyQuickTime("plus30")}

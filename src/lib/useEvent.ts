@@ -5,9 +5,13 @@ export type EventRecord = {
   id: string;
   title: string;
   host_name: string;
+  host_email?: string;
+  invite_audience?: string[] | null;
+  what_to_carry?: string[] | null;
   location?: string;
   time?: string;
   event_date?: string; // "2026-04-02" ISO date string
+  recurring_weekly?: boolean;
 };
 
 /**
@@ -204,8 +208,12 @@ export function useEvent(
       // Reconcile optimistic updates
       // Only clear optimistic IDs if we actually see the corresponding record in the DB
       // or if enough time has passed (to avoid permanent ghosts)
-      const confirmedUserTokens = new Set(nextResponses.map(r => r.user_token).filter(Boolean));
-      const confirmedNames = new Set(nextResponses.map(r => r.name).filter(Boolean));
+      const confirmedUserTokens = new Set(
+        nextResponses.map((r) => r.user_token).filter(Boolean),
+      );
+      const confirmedNames = new Set(
+        nextResponses.map((r) => r.name).filter(Boolean),
+      );
 
       // We'll filter the responses in the component, but let's manage the optimisticIds set
       // Actually, a simpler way: just clear it once we have a non-empty list that likely includes our update
@@ -380,7 +388,7 @@ export function useEvent(
 
   const needsName = useMemo(() => {
     if (isMockMode) return false;
-    if (typeof window === "undefined") return true; 
+    if (typeof window === "undefined") return true;
     return !localStorage.getItem("aajao_name");
   }, [isMockMode, userStatus]);
 

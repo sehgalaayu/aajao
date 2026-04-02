@@ -58,8 +58,8 @@ export function InviteCard({
     : "https://wa.me";
 
   return (
-    <section className="relative mt-12 mb-8">
-      <div className="bg-surface-container-highest rounded-xl p-6 overflow-hidden relative group">
+    <section className="relative mt-10 sm:mt-12 mb-8">
+      <div className="bg-surface-container-highest rounded-xl p-5 sm:p-6 overflow-hidden relative group">
         {/* Confetti Blob */}
         <div className="absolute -bottom-6 -right-6 w-32 h-32 bg-tertiary/10 rounded-full blur-3xl group-hover:bg-tertiary/20 transition-all"></div>
 
@@ -84,7 +84,7 @@ export function InviteCard({
             </h3>
           </div>
 
-          <p className="text-sm text-on-surface/70 pr-8">
+          <p className="text-sm text-on-surface/70 pr-0 sm:pr-8">
             Call your group before it's full 😬
           </p>
 
@@ -104,7 +104,7 @@ export function InviteCard({
             <button
               type="button"
               onClick={() => void copyLink()}
-              className="rounded-full py-3 px-5 border border-white/10 bg-surface-bright/40 hover:bg-surface-bright/55 transition-colors font-semibold text-sm"
+              className="w-full sm:w-auto rounded-full py-3 px-5 border border-white/10 bg-surface-bright/40 hover:bg-surface-bright/55 transition-colors font-semibold text-sm"
             >
               Invite your squad
             </button>
@@ -113,7 +113,7 @@ export function InviteCard({
               target="_blank"
               rel="noreferrer"
               onClick={onInvite}
-              className="bg-[#25D366] text-white rounded-full py-3 px-6 flex items-center justify-center gap-3 font-bold shadow-lg shadow-[#25D366]/20 hover:scale-[1.02] active:scale-95 transition-all text-sm"
+              className="w-full sm:w-auto bg-[#25D366] text-white rounded-full py-3 px-6 flex items-center justify-center gap-2.5 font-bold shadow-lg shadow-[#25D366]/20 hover:scale-[1.02] active:scale-95 transition-all text-sm"
             >
               <span className="material-symbols-outlined text-xl">share</span>
               Send to WhatsApp 🚀

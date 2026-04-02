@@ -36,11 +36,20 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       description: `Hosted by ${data.host_name} • Live list dekh 👀`,
       siteName: "Aajao",
       type: "website",
+      images: [
+        {
+          url: "/brand/aajao-share-card.png",
+          width: 1200,
+          height: 1200,
+          alt: "Aajao logo",
+        },
+      ],
     },
     twitter: {
       card: "summary_large_image",
       title: `🔥 ${data.title}`,
       description: `Hosted by ${data.host_name} • Live list dekh 👀`,
+      images: ["/brand/aajao-share-card.png"],
     },
   };
 }

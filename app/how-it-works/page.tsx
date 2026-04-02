@@ -70,7 +70,7 @@ export default function HowItWorksPage() {
     <div className="min-h-screen bg-background text-on-surface selection:bg-primary selection:text-background overflow-x-hidden">
       <Navbar activePage="how-it-works" />
 
-      <section className="pt-36 pb-14 px-6 relative overflow-hidden">
+      <section className="pt-24 sm:pt-32 md:pt-36 pb-12 sm:pb-14 px-4 sm:px-6 relative overflow-hidden">
         <div className="absolute top-16 left-1/2 -translate-x-1/2 w-[560px] h-[560px] bg-primary/10 rounded-full blur-[120px]" />
         <div className="max-w-4xl mx-auto text-center relative z-10">
           <motion.p
@@ -84,7 +84,7 @@ export default function HowItWorksPage() {
             initial={{ opacity: 0, y: 14 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.05 }}
-            className="font-headline text-5xl md:text-7xl font-black italic tracking-tighter leading-[0.92]"
+            className="font-headline text-4xl sm:text-5xl md:text-7xl font-black italic tracking-tighter leading-[0.92]"
           >
             WhatsApp planning = chaos 😵‍💫
           </motion.h1>
@@ -92,7 +92,7 @@ export default function HowItWorksPage() {
             initial={{ opacity: 0, y: 14 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.12 }}
-            className="text-on-surface-variant text-lg md:text-xl max-w-2xl mx-auto font-semibold mt-6"
+            className="text-on-surface-variant text-base sm:text-lg md:text-xl max-w-2xl mx-auto font-semibold mt-5 sm:mt-6"
           >
             47 messages. No clarity. Aajao turns that into one clean flow:
             create, share, and see who is actually coming.
@@ -100,16 +100,16 @@ export default function HowItWorksPage() {
         </div>
       </section>
 
-      <section className="px-6 pb-8 max-w-6xl mx-auto">
-        <div className="grid md:grid-cols-2 gap-10 items-center rounded-[2rem] border border-white/10 bg-surface/40 p-7 md:p-10">
+      <section className="px-4 sm:px-6 pb-8 max-w-6xl mx-auto">
+        <div className="grid md:grid-cols-2 gap-8 sm:gap-10 items-center rounded-[2rem] border border-white/10 bg-surface/40 p-5 sm:p-7 md:p-10">
           <div>
             <p className="text-xs uppercase tracking-[0.2em] font-black text-primary mb-4">
               Step 1
             </p>
-            <h2 className="text-4xl font-headline font-black italic tracking-tight leading-tight">
+            <h2 className="text-3xl sm:text-4xl font-headline font-black italic tracking-tight leading-tight">
               Create a scene
             </h2>
-            <p className="text-on-surface-variant text-lg font-medium mt-4">
+            <p className="text-on-surface-variant text-base sm:text-lg font-medium mt-4">
               Add title, time, and location in around 10 seconds. No signup
               wall, no heavy form.
             </p>
@@ -141,14 +141,14 @@ export default function HowItWorksPage() {
 
       <StepConnector />
 
-      <section className="px-6 pb-8 max-w-6xl mx-auto">
-        <div className="grid md:grid-cols-2 gap-10 items-center rounded-[2rem] border border-white/10 bg-surface/40 p-7 md:p-10">
+      <section className="px-4 sm:px-6 pb-8 max-w-6xl mx-auto">
+        <div className="grid md:grid-cols-2 gap-8 sm:gap-10 items-center rounded-[2rem] border border-white/10 bg-surface/40 p-5 sm:p-7 md:p-10">
           <div className="order-2 md:order-1 rounded-[1.75rem] border border-white/10 bg-background/70 p-6">
             <div className="space-y-3">
-              <div className="ml-auto w-[88%] rounded-2xl rounded-tr-md bg-[#075E54] px-4 py-3 text-sm font-semibold text-white">
+              <div className="ml-auto w-[92%] sm:w-[88%] rounded-2xl rounded-tr-md bg-[#075E54] px-4 py-3 text-sm font-semibold text-white">
                 Scene set hai. Tap and RSVP: aajao.app/saturday-house 🔥
               </div>
-              <div className="w-[92%] rounded-2xl border border-white/10 bg-surface/60 p-4">
+              <div className="w-full sm:w-[92%] rounded-2xl border border-white/10 bg-surface/60 p-4">
                 <p className="text-sm font-black text-on-surface">
                   Saturday House Scene
                 </p>
@@ -165,10 +165,10 @@ export default function HowItWorksPage() {
             <p className="text-xs uppercase tracking-[0.2em] font-black text-secondary mb-4">
               Step 2
             </p>
-            <h2 className="text-4xl font-headline font-black italic tracking-tight leading-tight">
+            <h2 className="text-3xl sm:text-4xl font-headline font-black italic tracking-tight leading-tight">
               Send to your group
             </h2>
-            <p className="text-on-surface-variant text-lg font-medium mt-4">
+            <p className="text-on-surface-variant text-base sm:text-lg font-medium mt-4">
               One link to WhatsApp, Insta, or SMS. Everyone sees the same plan
               with zero confusion.
             </p>
@@ -181,16 +181,16 @@ export default function HowItWorksPage() {
 
       <StepConnector />
 
-      <section className="px-6 pb-14 max-w-6xl mx-auto">
-        <div className="grid md:grid-cols-2 gap-10 items-start rounded-[2rem] border border-white/10 bg-surface/40 p-7 md:p-10">
+      <section className="px-4 sm:px-6 pb-14 max-w-6xl mx-auto">
+        <div className="grid md:grid-cols-2 gap-8 sm:gap-10 items-start rounded-[2rem] border border-white/10 bg-surface/40 p-5 sm:p-7 md:p-10">
           <div>
             <p className="text-xs uppercase tracking-[0.2em] font-black text-tertiary mb-4">
               Step 3
             </p>
-            <h2 className="text-4xl font-headline font-black italic tracking-tight leading-tight">
+            <h2 className="text-3xl sm:text-4xl font-headline font-black italic tracking-tight leading-tight">
               See who is coming
             </h2>
-            <p className="text-on-surface-variant text-lg font-medium mt-4">
+            <p className="text-on-surface-variant text-base sm:text-lg font-medium mt-4">
               Live RSVP updates, momentum, and social proof. No more guessing
               from group chat silence.
             </p>
@@ -227,9 +227,9 @@ export default function HowItWorksPage() {
         </div>
       </section>
 
-      <section className="px-6 pb-20 text-center">
+      <section className="px-4 sm:px-6 pb-20 text-center">
         <div className="max-w-3xl mx-auto rounded-[2rem] border border-primary/20 bg-surface/40 px-8 py-12">
-          <h2 className="text-5xl md:text-6xl font-headline font-black italic tracking-tighter leading-[0.92]">
+          <h2 className="text-4xl sm:text-5xl md:text-6xl font-headline font-black italic tracking-tighter leading-[0.92]">
             Create your first scene 🚀
           </h2>
           <p className="mt-4 text-on-surface-variant text-lg font-semibold">

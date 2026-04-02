@@ -60,6 +60,11 @@ export function RSVPModule({
     ? `https://wa.me/?text=${encodeURIComponent(shareMessage)}`
     : "https://wa.me";
 
+  const nudgeMessage = `Quick reminder 🚨\n\n${event?.title ?? "The scene"} is coming up. Lock your RSVP here: ${shareUrl}`;
+  const nudgeHref = shareUrl
+    ? `https://wa.me/?text=${encodeURIComponent(nudgeMessage)}`
+    : "https://wa.me";
+
   const handleRSVP = (status: string) => {
     if (needsName) {
       // Open the modal, save the pending status
@@ -258,18 +263,28 @@ export function RSVPModule({
               <p className="text-sm text-on-surface-variant mt-1">
                 Make this a scene 👀
               </p>
-              <a
-                href={whatsappHref}
-                target="_blank"
-                rel="noreferrer"
-                onClick={onInvite}
-                className="mt-3 inline-flex items-center justify-center gap-2 bg-[#25D366] text-white rounded-full py-2.5 px-5 font-bold text-sm active:scale-95 transition-transform"
-              >
-                <span className="material-symbols-outlined text-base">
-                  share
-                </span>
-                Share on WhatsApp
-              </a>
+              <div className="mt-3 flex flex-col sm:flex-row gap-2.5">
+                <a
+                  href={whatsappHref}
+                  target="_blank"
+                  rel="noreferrer"
+                  onClick={onInvite}
+                  className="inline-flex items-center justify-center gap-2 bg-[#25D366] text-white rounded-full py-2.5 px-5 font-bold text-sm active:scale-95 transition-transform"
+                >
+                  <span className="material-symbols-outlined text-base">
+                    share
+                  </span>
+                  Share on WhatsApp
+                </a>
+                <a
+                  href={nudgeHref}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center justify-center gap-2 rounded-full border border-white/15 bg-surface/50 py-2.5 px-5 font-bold text-sm text-on-surface"
+                >
+                  Nudge maybes
+                </a>
+              </div>
               {inviteRewardMessage && (
                 <p className="text-sm text-primary font-bold mt-3">
                   {inviteRewardMessage}
