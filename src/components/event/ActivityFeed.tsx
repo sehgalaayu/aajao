@@ -56,7 +56,7 @@ type ActivityFeedProps = {
 
 export function ActivityFeed({ responses }: ActivityFeedProps) {
   const activityFeed = useMemo(() => {
-    const baseItems = [...responses]
+    return [...responses]
       .slice(-6)
       .reverse()
       .map((response) => ({
@@ -64,49 +64,6 @@ export function ActivityFeed({ responses }: ActivityFeedProps) {
         content: formatActivity(response.name, response.status),
         name: response.name,
       }));
-
-    const goingCount = responses.filter(
-      (response) => response.status === "going",
-    ).length;
-    const maybeCount = responses.filter(
-      (response) => response.status === "maybe",
-    ).length;
-    const synthetic: Array<{
-      id: string;
-      content: React.ReactNode;
-      name: string;
-    }> = [];
-
-    if (goingCount >= 2) {
-      synthetic.push({
-        id: "scene-joined",
-        content: <>2 people joined just now 🔥</>,
-        name: "Scene",
-      });
-    }
-
-    if (goingCount >= 3) {
-      synthetic.push({
-        id: "scene-picking",
-        content: <>Scene picking up ⚡</>,
-        name: "Scene",
-      });
-      synthetic.push({
-        id: "scene-urgency",
-        content: <>Call your group before it's full 😬</>,
-        name: "Scene",
-      });
-    }
-
-    if (maybeCount > 0) {
-      synthetic.push({
-        id: "still-thinking",
-        content: <>Rahul is still thinking 🤔</>,
-        name: "Rahul",
-      });
-    }
-
-    return [...synthetic, ...baseItems].slice(0, 6);
   }, [responses]);
 
   return (

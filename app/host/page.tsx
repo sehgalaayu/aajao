@@ -26,6 +26,9 @@ export default function HostDashboardPage() {
   const [message, setMessage] = useState<string | null>(null);
 
   const supabase = useMemo(() => getSupabaseClient(), []);
+  const appBaseUrl =
+    process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") ||
+    window.location.origin;
 
   useEffect(() => {
     const checkSession = async () => {
@@ -104,7 +107,7 @@ export default function HostDashboardPage() {
     const { error } = await supabase.auth.signInWithOtp({
       email: normalized,
       options: {
-        emailRedirectTo: `${window.location.origin}/host`,
+        emailRedirectTo: `${appBaseUrl}/host`,
       },
     });
 

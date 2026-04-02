@@ -14,6 +14,87 @@ type LocationSuggestion = {
   label: string;
 };
 
+const LOCAL_LOCATION_FALLBACKS = [
+  "Shivaji Park, Dadar, Mumbai",
+  "Bandra Bandstand, Mumbai",
+  "Juhu Beach, Mumbai",
+  "Marine Drive, Mumbai",
+  "Siri Fort Sports Complex, Delhi",
+  "Hauz Khas Village, Delhi",
+  "Connaught Place, New Delhi",
+  "India Gate, New Delhi",
+  "Koramangala, Bengaluru",
+  "Indiranagar, Bengaluru",
+  "Cubbon Park, Bengaluru",
+  "MG Road, Bengaluru",
+  "Banjara Hills, Hyderabad",
+  "Jubilee Hills, Hyderabad",
+  "Hitech City, Hyderabad",
+  "Charminar, Hyderabad",
+  "Koregaon Park, Pune",
+  "Viman Nagar, Pune",
+  "FC Road, Pune",
+  "Aundh, Pune",
+  "Park Street, Kolkata",
+  "Salt Lake, Kolkata",
+  "Gariahat, Kolkata",
+  "Princep Ghat, Kolkata",
+  "T Nagar, Chennai",
+  "Anna Nagar, Chennai",
+  "Marina Beach, Chennai",
+  "Besant Nagar, Chennai",
+  "Sector 18, Noida",
+  "Cyber Hub, Gurgaon",
+  "Whitefield, Bengaluru",
+  "Powai, Mumbai",
+];
+
+const getFallbackLocationSuggestions = (
+  query: string,
+): LocationSuggestion[] => {
+  const normalized = query.trim().toLowerCase();
+  if (normalized.length < 2) return [];
+
+  const seen = new Set<string>();
+
+  const scored = LOCAL_LOCATION_FALLBACKS.map((label) => {
+    const lower = label.toLowerCase();
+    const startsWithQuery = lower.startsWith(normalized);
+    const tokenStartsWithQuery = lower
+      .split(/[^a-z0-9]+/)
+      .some((token) => token.startsWith(normalized));
+    const containsQuery = lower.includes(normalized);
+
+    let score = -1;
+    if (startsWithQuery) score = 3;
+    else if (tokenStartsWithQuery) score = 2;
+    else if (containsQuery) score = 1;
+
+    return { label, score, lower };
+  })
+    .filter((item) => item.score > 0)
+    .sort((a, b) => {
+      if (b.score !== a.score) return b.score - a.score;
+      if (a.lower.length !== b.lower.length)
+        return a.lower.length - b.lower.length;
+      return a.lower.localeCompare(b.lower);
+    });
+
+  return scored
+    .map((item) => item.label)
+    .filter((label) => {
+      const key = label.toLowerCase();
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    })
+    .slice(0, 6)
+    .map((label) => ({
+      id: `fallback-${label.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`,
+      label,
+    }));
+};
+
 export default function CreatePage() {
   const router = useRouter();
   const mapboxAccessToken = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN;
@@ -204,6 +285,7 @@ export default function CreatePage() {
 
   useEffect(() => {
     const query = location.trim();
+    const fallbackSuggestions = getFallbackLocationSuggestions(query);
 
     if (query.length < 2 || !showLocationDropdown) {
       setLocationSuggestions([]);
@@ -213,8 +295,8 @@ export default function CreatePage() {
     }
 
     if (!mapboxAccessToken) {
-      setLocationSuggestions([]);
-      setActiveLocationIndex(-1);
+      setLocationSuggestions(fallbackSuggestions);
+      setActiveLocationIndex(fallbackSuggestions.length > 0 ? 0 : -1);
       setLocationLoading(false);
       return;
     }
@@ -229,7 +311,8 @@ export default function CreatePage() {
         );
 
         if (!response.ok) {
-          setLocationSuggestions([]);
+          setLocationSuggestions(fallbackSuggestions);
+          setActiveLocationIndex(fallbackSuggestions.length > 0 ? 0 : -1);
           return;
         }
 
@@ -237,16 +320,21 @@ export default function CreatePage() {
           features?: Array<{ id: string; place_name: string }>;
         };
 
-        const suggestions = (data.features ?? []).map((item) => ({
+        const mapboxSuggestions = (data.features ?? []).map((item) => ({
           id: item.id,
           label: item.place_name,
         }));
 
+        const suggestions =
+          mapboxSuggestions.length > 0
+            ? mapboxSuggestions
+            : fallbackSuggestions;
+
         setLocationSuggestions(suggestions);
         setActiveLocationIndex(suggestions.length > 0 ? 0 : -1);
       } catch {
-        setLocationSuggestions([]);
-        setActiveLocationIndex(-1);
+        setLocationSuggestions(fallbackSuggestions);
+        setActiveLocationIndex(fallbackSuggestions.length > 0 ? 0 : -1);
       } finally {
         setLocationLoading(false);
       }

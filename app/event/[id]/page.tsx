@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useSearchParams } from "next/navigation";
 import { EventRecord, useEvent } from "@/src/lib/useEvent";
 import { EventShell } from "@/src/components/event/EventShell";
@@ -45,6 +45,7 @@ export default function EventPage() {
   const [hostAuthMessage, setHostAuthMessage] = useState<string | null>(null);
   const [hostAuthLoading, setHostAuthLoading] = useState(false);
   const [hostVerified, setHostVerified] = useState(false);
+  const [hostFromLocalDevice, setHostFromLocalDevice] = useState(false);
   const [hostSaveLoading, setHostSaveLoading] = useState(false);
   const [hostSaveMessage, setHostSaveMessage] = useState<string | null>(null);
   const [nudgeFilter, setNudgeFilter] = useState<"maybes" | "non_responders">(
@@ -58,6 +59,7 @@ export default function EventPage() {
   const [editTime, setEditTime] = useState("");
   const [editDate, setEditDate] = useState("");
   const [editWhatToCarry, setEditWhatToCarry] = useState("");
+  const hostAutoMarkedGoing = useRef(false);
 
   const displayEvent =
     event && eventOverride
@@ -82,11 +84,19 @@ export default function EventPage() {
       const isVerifiedHost =
         !!sessionEmail && sessionEmail === event.host_email?.toLowerCase();
 
+      const localHostEmail =
+        localStorage.getItem("aajao_host_email")?.toLowerCase() ?? null;
+      const isHostFromLocal =
+        !!localHostEmail && localHostEmail === event.host_email?.toLowerCase();
+
       setHostVerified(isVerifiedHost);
+      setHostFromLocalDevice(isHostFromLocal);
 
       if (isVerifiedHost && sessionEmail) {
         localStorage.setItem("aajao_host_email", sessionEmail);
         setHostEmailInput(sessionEmail);
+      } else if (isHostFromLocal && localHostEmail) {
+        setHostEmailInput(localHostEmail);
       }
     };
 
@@ -102,6 +112,28 @@ export default function EventPage() {
       subscription.unsubscribe();
     };
   }, [event?.host_email]);
+
+  useEffect(() => {
+    if (!event?.host_name || !event?.host_email || loading) return;
+    if (hostAutoMarkedGoing.current) return;
+    if (!hostFromLocalDevice && !hostVerified) return;
+    if (userStatus === "going") {
+      hostAutoMarkedGoing.current = true;
+      return;
+    }
+
+    hostAutoMarkedGoing.current = true;
+    localStorage.setItem("aajao_name", event.host_name);
+    void addResponse(event.host_name, "going");
+  }, [
+    addResponse,
+    event?.host_email,
+    event?.host_name,
+    hostFromLocalDevice,
+    hostVerified,
+    loading,
+    userStatus,
+  ]);
 
   useEffect(() => {
     if (!event) return;
@@ -144,6 +176,18 @@ export default function EventPage() {
     return inviteAudience.filter((name) => !responded.has(normalize(name)));
   }, [inviteAudience, responses]);
 
+  const isHostUser = hostVerified || hostFromLocalDevice;
+  const canSeeGuestNames = isHostUser || Boolean(userStatus);
+
+  const sortedResponses = useMemo(
+    () =>
+      [...responses].sort(
+        (a, b) =>
+          new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+      ),
+    [responses],
+  );
+
   const carryItems = useMemo(() => {
     if (
       !displayEvent?.what_to_carry ||
@@ -174,7 +218,10 @@ export default function EventPage() {
 
     try {
       const supabase = getSupabaseClient();
-      const redirectTo = `${window.location.origin}/event/${eventId}`;
+      const appBaseUrl =
+        process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") ||
+        window.location.origin;
+      const redirectTo = `${appBaseUrl}/event/${eventId}`;
       const { error } = await supabase.auth.signInWithOtp({
         email: normalized,
         options: { emailRedirectTo: redirectTo },
@@ -288,16 +335,14 @@ export default function EventPage() {
         onInvite={markInviteAction}
         onSelect={addResponse}
         createdNow={createdNow}
-        needsName={needsName}
+        needsName={isHostUser ? false : needsName}
       />
 
-      {!loading &&
-        (userState === "engaged" || userState === "inviter") &&
-        responses.length > 0 && <AvatarRow responses={responses} />}
-
-      {!loading && (userState === "engaged" || userState === "inviter") && (
-        <ActivityFeed responses={responses} />
+      {!loading && canSeeGuestNames && responses.length > 0 && (
+        <AvatarRow responses={responses} />
       )}
+
+      {!loading && canSeeGuestNames && <ActivityFeed responses={responses} />}
 
       {(userState === "engaged" || userState === "inviter") && event && (
         <div
@@ -318,6 +363,44 @@ export default function EventPage() {
             onInvite={markInviteAction}
           />
         </div>
+      )}
+
+      {isHostUser && (
+        <section className="mt-6 rounded-3xl border border-secondary/25 bg-secondary/8 p-5 sm:p-6 animate-slide-in-up">
+          <h3 className="font-headline text-xl sm:text-2xl font-black italic tracking-tight">
+            Host attendee list
+          </h3>
+
+          {sortedResponses.length === 0 ? (
+            <p className="mt-3 text-sm text-on-surface-variant">
+              No responses yet.
+            </p>
+          ) : (
+            <div className="mt-3 space-y-2.5">
+              {sortedResponses.map((response) => (
+                <div
+                  key={response.id}
+                  className="flex items-center justify-between rounded-xl border border-white/10 bg-background/40 px-4 py-3"
+                >
+                  <p className="text-sm sm:text-base font-semibold text-on-surface break-words pr-3">
+                    {response.name}
+                  </p>
+                  <span
+                    className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-black uppercase tracking-wide ${
+                      response.status === "going"
+                        ? "bg-primary/20 text-primary"
+                        : response.status === "maybe"
+                          ? "bg-secondary/20 text-secondary"
+                          : "bg-tertiary/20 text-tertiary"
+                    }`}
+                  >
+                    {response.status}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
       )}
 
       {event && (
